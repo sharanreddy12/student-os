@@ -384,7 +384,7 @@ function BentoDashboard() {
 
 function Cell({
   children, title, icon: Icon, className, accent = "var(--neon-blue)",
-}: { children: React.ReactNode; title: string; icon: React.ComponentType<{className?:string}>; className?: string; accent?: string }) {
+}: { children: React.ReactNode; title: string; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; className?: string; accent?: string }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20, scale: 0.96 }}
@@ -494,7 +494,7 @@ function Notes() {
 function Chip({ children }: { children: React.ReactNode }) {
   return <span className="inline-flex items-center gap-1 rounded-full bg-white/8 px-2 py-1 text-[10px] text-foreground/85">{children}</span>;
 }
-function Tag({ icon: Icon, children }: { icon: React.ComponentType<{className?:string}>; children: React.ReactNode }) {
+function Tag({ icon: Icon, children }: { icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; children: React.ReactNode }) {
   return (
     <span className="inline-flex items-center gap-1 rounded-md bg-white/5 px-2 py-1 text-[10px] text-muted-foreground">
       <Icon className="h-3 w-3" /> {children}
