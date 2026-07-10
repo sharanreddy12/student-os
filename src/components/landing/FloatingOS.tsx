@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 type PanelDef = {
   title: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   className: string;
   depth: number;
   body: React.ReactNode;
