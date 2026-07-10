@@ -17,16 +17,20 @@ export function GlowOrb({ className, color = "blue" }: { className?: string; col
   );
 }
 
+type MagneticButtonProps = {
+  children: ReactNode;
+  className?: string;
+  variant?: "primary" | "ghost";
+  onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
+  type?: "button" | "submit" | "reset";
+};
 export function MagneticButton({
   children,
   className,
   variant = "primary",
-  ...rest
-}: {
-  children: ReactNode;
-  className?: string;
-  variant?: "primary" | "ghost";
-} & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  onClick,
+  type = "button",
+}: MagneticButtonProps) {
   const ref = useRef<HTMLButtonElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -44,6 +48,8 @@ export function MagneticButton({
   return (
     <motion.button
       ref={ref}
+      type={type}
+      onClick={onClick}
       onMouseMove={onMove}
       onMouseLeave={onLeave}
       style={{ x: sx, y: sy }}
@@ -54,7 +60,6 @@ export function MagneticButton({
           : "glass text-foreground/90 hover:text-foreground",
         className,
       )}
-      {...rest}
     >
       {variant === "primary" && (
         <span
