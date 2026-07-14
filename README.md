@@ -1,218 +1,85 @@
-# StudentOS — AI Operating System for Students
+# StudentOS
 
-A full-stack AI-powered academic management system built with TanStack Start, FastAPI, and PostgreSQL.
-
-## Architecture
-
-### Frontend
-
-- **Framework**: TanStack Start (React 19 + TypeScript)
-- **Styling**: TailwindCSS 4 with custom glass/neon design system
-- **Components**: Radix UI + shadcn/ui
-- **Animations**: Motion (Framer Motion)
-- **State Management**: TanStack Query
-- **Routing**: TanStack Router (file-based)
-
-### Backend
-
-- **Framework**: FastAPI (Python 3.11+)
-- **Database**: PostgreSQL with pgvector extension
-- **ORM**: SQLAlchemy 2.0 + Alembic migrations
-- **Authentication**: JWT (access + refresh tokens)
-- **AI Integration**: Swappable provider interface (Gemini or xAI Grok)
+StudentOS is a modern, AI-powered academic management system designed to streamline the educational experience for both students and teachers. 
 
 ## Features
 
-- ✅ User authentication (register, login, token refresh)
-- ✅ Subject management
-- ✅ Timetable with conflict detection
-- ✅ Assignment tracking
-- ✅ Attendance recording
-- ✅ Notes with markdown support
-- ✅ AI Assistant (chat, summarize, quiz)
-- ✅ Analytics (attendance risk, study patterns)
-- 🚧 RAG pipeline (in progress)
-- 🚧 Advanced ML analytics (planned)
+- **Role-Based Dashboards**: Tailored interfaces for Students, Teachers, Admins, and Super Admins.
+- **Academic Tracking**: Comprehensive management of Timetables, Attendance, Assignments, and Term Marks.
+- **AI Academic Assistant**: An intelligent chatbot powered by **Llama 3** (via Groq) that can answer queries grounded in the user's academic context (attendance, marks, assignments) and uploaded study notes using Retrieval-Augmented Generation (RAG).
+- **Study Notes Management**: Upload and index markdown notes for the AI to retrieve and assist with studies.
 
-## Known Limitations
+## Tech Stack
 
-1. **SSR Disabled for Auth Routes**: Authenticated routes use `ssr: false` to avoid building a full cookie-session backend. This is a deliberate trade-off for simplicity, at the cost of slightly slower first paint on authenticated pages.
+### Frontend
+- **Framework**: [React](https://react.dev/) / [TanStack Start](https://tanstack.com/router)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Components**: [Radix UI](https://www.radix-ui.com/) (Headless accessible components)
+- **Data Fetching**: [TanStack Query](https://tanstack.com/query)
 
-2. **Synthetic Training Data**: The attendance risk model is trained on synthetic data. This is a known v1 limitation and should be replaced with real user data in production.
-
-3. **AI Features Require API Keys**: AI features (chat, summarize, quiz) require either a Gemini API key or xAI API key. These are optional - the app works without them, but AI features will be disabled.
+### Backend
+- **Framework**: [FastAPI](https://fastapi.tiangolo.com/) (Python)
+- **Database**: [SQLite](https://www.sqlite.org/) with [SQLAlchemy](https://www.sqlalchemy.org/) ORM (and Alembic for migrations)
+- **AI/LLM**: [Groq API](https://groq.com/) for lightning-fast Llama-3 inference.
+- **RAG Pipeline**: Custom built embedding fallback search and text chunking system.
 
 ## Setup Instructions
 
 ### Prerequisites
+- Node.js (v18+)
+- Python 3.10+
 
-- Node.js 18+
-- Python 3.11+
-- PostgreSQL 15+ (or use Docker)
-- Docker (optional, for containerized setup)
+### 1. Backend Setup
 
-### Backend Setup
-
-1. **Navigate to backend directory**:
+Navigate to the backend directory and set up your Python environment:
 
 ```bash
 cd backend
-```
-
-2. **Create virtual environment**:
-
-```bash
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
 
-3. **Install dependencies**:
+# Activate the virtual environment
+# Windows:
+venv\Scripts\activate
+# macOS/Linux:
+source venv/bin/activate
 
-```bash
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-4. **Configure environment variables**:
-
-```bash
-cp .env.example .env
-# Edit .env with your values
+Create a `.env` file in the `backend/` directory using `.env.example` as a template and provide your Groq API key:
+```env
+VITE_API_URL=http://localhost:8000/api/v1
+GROQ_API_KEY=gsk_your_groq_api_key_here
 ```
 
-Required environment variables:
-
-- `DATABASE_URL` - PostgreSQL connection string
-- `JWT_SECRET` - Secret key for JWT tokens
-- `ALLOWED_ORIGINS` - Comma-separated list of allowed origins (e.g., `http://localhost:3000,http://localhost:5173`)
-
-Optional (for AI features):
-
-- `GEMINI_API_KEY` - Google Gemini API key
-- `XAI_API_KEY` - xAI Grok API key
-
-5. **Run database migrations**:
-
+Apply database migrations:
 ```bash
 alembic upgrade head
 ```
 
-6. **Start the backend server**:
+Run the FastAPI development server:
+```bash
+uvicorn app.main:app --reload --port 8000
+```
+
+### 2. Frontend Setup
+
+In a new terminal window, navigate to the frontend directory:
 
 ```bash
-python run.py
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start the Vite development server
+npm run dev
 ```
 
-The backend will be available at `http://localhost:8000`
+The frontend will be available at `http://localhost:5173`.
 
-API documentation: `http://localhost:8000/docs`
-
-### Frontend Setup
-
-1. **Install dependencies**:
-
-```bash
-bun install  # or npm install
-```
-
-2. **Configure environment variables**:
-
-```bash
-cp .env.example .env
-# Edit .env with your backend URL
-```
-
-3. **Start the development server**:
-
-```bash
-bun run dev  # or npm run dev
-```
-
-The frontend will be available at `http://localhost:3000`
-
-### Docker Setup (Recommended)
-
-1. **Start PostgreSQL and backend**:
-
-```bash
-docker-compose up
-```
-
-This will start:
-
-- PostgreSQL on port 5432
-- Backend API on port 8000
-
-2. **Run migrations** (first time only):
-
-```bash
-docker-compose exec backend alembic upgrade head
-```
-
-3. **Start the frontend** (in a separate terminal):
-
-```bash
-bun run dev
-```
-
-## API Contract
-
-All API endpoints are documented in `api-contract.md`. Both frontend and backend must conform to this contract exactly.
-
-Base URL: `http://localhost:8000/api/v1`
-
-Authentication: Bearer JWT in `Authorization: Bearer <access_token>` header
-
-## Development
-
-### Adding New Features
-
-1. **Backend**: Add endpoints to `backend/app/routers/`, update models in `backend/app/models.py`
-2. **Frontend**: Add routes to `src/routes/`, use the API client in `src/api/client.ts`
-3. **API Contract**: Update `api-contract.md` first, then implement both sides
-
-### Running Tests
-
-```bash
-# Backend tests
-cd backend
-pytest
-
-# Frontend linting
-bun run lint
-```
-
-## Project Structure
-
-```
-studentos-os-interface/
-├── api-contract.md          # Shared API specification
-├── backend/                 # FastAPI backend
-│   ├── app/
-│   │   ├── main.py         # FastAPI app entry
-│   │   ├── models.py       # SQLAlchemy models
-│   │   ├── schemas.py      # Pydantic schemas
-│   │   ├── routers/        # API route handlers
-│   │   ├── services/       # Business logic (AI, etc.)
-│   │   ├── auth.py         # JWT utilities
-│   │   ├── dependencies.py # Auth dependencies
-│   │   ├── database.py     # Database connection
-│   │   └── config.py       # Configuration
-│   ├── alembic/            # Database migrations
-│   ├── requirements.txt    # Python dependencies
-│   └── Dockerfile
-├── src/                     # TanStack Start frontend
-│   ├── routes/             # File-based routing
-│   ├── components/         # React components
-│   │   ├── landing/        # Landing page components
-│   │   └── ui/             # shadcn/ui components
-│   ├── api/                # API client
-│   ├── lib/                # Utilities
-│   ├── hooks/              # Custom hooks
-│   └── styles.css          # Global styles
-├── docker-compose.yml       # Docker orchestration
-└── package.json            # Frontend dependencies
-```
-
-## License
-
-MIT
+## Architecture & API Contract
+- The frontend and backend communicate via a strictly defined REST API. 
+- The backend handles authentication (JWT) and passes context-aware datasets directly to the AI Assistant module, ensuring secure multi-tenant data access.
+- See `api-contract.md` and `architecture_diagram.md` for deeper technical insights.
