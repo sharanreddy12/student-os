@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import { useState } from "react";
-import { Sparkles, Mail, Lock, ArrowRight } from "lucide-react";
+import { Sparkles, Mail, Lock, ArrowRight, User } from "lucide-react";
 import { MagneticButton, Panel3D, GlowOrb } from "@/components/landing/atoms";
 import { apiClient } from "@/api/client";
 
@@ -23,8 +23,12 @@ function Login() {
     setError("");
 
     try {
-      await apiClient.login(email, password);
-      router.navigate({ to: "/dashboard" });
+      const response = await apiClient.login(email, password);
+      // Dispatch custom event to trigger user context refresh
+      window.dispatchEvent(new CustomEvent("user-login"));
+      router.navigate({
+        to: response.user?.role === "TEACHER" ? "/teacher-dashboard" : "/dashboard",
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -37,8 +41,8 @@ function Login() {
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-hero opacity-70" />
         <div className="absolute inset-0 bg-grid opacity-40" />
-        <GlowOrb color="blue" className="h-[500px] w-[500px] left-[-150px] top-[10%]" />
-        <GlowOrb color="purple" className="h-[420px] w-[420px] right-[-120px] top-[40%]" />
+        <GlowOrb color="blue" className="h-125 w-125 -left-37.5 top-[10%]" />
+        <GlowOrb color="purple" className="h-105 w-105 -right-30 top-[40%]" />
       </div>
 
       <div className="flex min-h-screen items-center justify-center px-4">
@@ -56,8 +60,7 @@ function Login() {
                   className="inline-flex items-center gap-2 text-sm font-semibold tracking-tight mb-6"
                 >
                   <span
-                    className="grid h-6 w-6 place-items-center rounded-md"
-                    style={{ background: "var(--gradient-brand)" }}
+                    className="grid h-6 w-6 place-items-center rounded-md bg-gradient-brand"
                   >
                     <span className="h-2 w-2 rounded-sm bg-background" />
                   </span>
@@ -125,7 +128,7 @@ function Login() {
                 <span className="text-muted-foreground">Don't have an account? </span>
                 <Link
                   to="/register"
-                  className="font-medium hover:text-foreground text-[color:var(--neon-cyan)]"
+                  className="font-medium hover:text-foreground text-neon-cyan"
                 >
                   Sign up
                 </Link>

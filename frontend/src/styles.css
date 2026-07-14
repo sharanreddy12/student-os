@@ -1,9 +1,6 @@
-/* tailwindcss v4 - ignore parser errors */
-@import "tailwindcss" source(none);
-@source "../src";
+/* tailwindcss v4 */
+@import "tailwindcss";
 @import "tw-animate-css";
-
-@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -76,6 +73,7 @@
   --neon-purple: oklch(0.66 0.22 295);
   --neon-cyan: oklch(0.78 0.14 210);
   --neon-green: oklch(0.72 0.17 160);
+  --neon-red: oklch(0.65 0.24 25);
   --neon-amber: oklch(0.78 0.16 75);
 
   --gradient-hero:
@@ -136,6 +134,7 @@
 @utility glass {
   background: var(--glass);
   border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
   backdrop-filter: blur(20px) saturate(150%);
   border-radius: var(--radius-2xl);
 }
@@ -143,6 +142,7 @@
 @utility glass-strong {
   background: color-mix(in oklab, var(--card) 55%, transparent);
   border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
   backdrop-filter: blur(24px) saturate(160%);
   border-radius: var(--radius-2xl);
 }
@@ -173,7 +173,98 @@
     linear-gradient(to right, color-mix(in oklab, white 6%, transparent) 1px, transparent 1px),
     linear-gradient(to bottom, color-mix(in oklab, white 6%, transparent) 1px, transparent 1px);
   background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black, transparent 75%);
   mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black, transparent 75%);
+}
+
+@utility bg-gradient-brand {
+  background: var(--gradient-brand);
+}
+
+/* Subject color swatches — used in the Manage Subjects modal color picker */
+@utility bg-swatch-blue {
+  background-color: #3b82f6;
+}
+@utility bg-swatch-green {
+  background-color: #10b981;
+}
+@utility bg-swatch-amber {
+  background-color: #f59e0b;
+}
+@utility bg-swatch-red {
+  background-color: #ef4444;
+}
+@utility bg-swatch-purple {
+  background-color: #8b5cf6;
+}
+@utility bg-swatch-pink {
+  background-color: #ec4899;
+}
+
+/* Dynamic subject color — reads from a CSS custom property set via data attribute */
+@utility bg-subject-color {
+  background-color: var(--subject-color);
+}
+
+@utility text-risk-low {
+  color: var(--neon-green);
+}
+@utility text-risk-medium {
+  color: var(--neon-amber);
+}
+@utility text-risk-high {
+  color: var(--neon-red);
+}
+
+@utility bg-risk-low {
+  background: var(--neon-green);
+}
+@utility bg-risk-medium {
+  background: var(--neon-amber);
+}
+@utility bg-risk-high {
+  background: var(--neon-red);
+}
+
+@utility text-attendance-high {
+  color: var(--neon-green);
+}
+@utility text-attendance-medium {
+  color: var(--neon-blue);
+}
+@utility text-attendance-low {
+  color: var(--neon-amber);
+}
+
+@utility bg-attendance-high {
+  background: var(--neon-green);
+}
+@utility bg-attendance-medium {
+  background: var(--neon-blue);
+}
+@utility bg-attendance-low {
+  background: var(--neon-amber);
+}
+
+@utility bg-card-icon-blue {
+  background: color-mix(in oklab, var(--neon-blue) 20%, transparent);
+}
+@utility bg-card-icon-green {
+  background: color-mix(in oklab, var(--neon-green) 20%, transparent);
+}
+@utility bg-card-icon-amber {
+  background: color-mix(in oklab, var(--neon-amber) 20%, transparent);
+}
+@utility bg-card-icon-purple {
+  background: color-mix(in oklab, var(--neon-purple) 20%, transparent);
+}
+
+@utility bg-gradient-card-accent {
+  background: linear-gradient(140deg, color-mix(in oklab, var(--neon-purple) 20%, transparent), color-mix(in oklab, var(--neon-blue) 12%, transparent));
+}
+
+@utility bg-neon-purple-faded {
+  background: color-mix(in oklab, var(--neon-purple) 18%, transparent);
 }
 
 @keyframes float-slow {

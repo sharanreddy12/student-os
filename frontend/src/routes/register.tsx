@@ -11,28 +11,6 @@ export const Route = createFileRoute("/register")({
 });
 
 function Register() {
-  const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    try {
-      await apiClient.register(name, email, password);
-      router.navigate({ to: "/dashboard" });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Registration failed");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
     <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
@@ -50,8 +28,8 @@ function Register() {
           className="w-full max-w-md"
         >
           <Panel3D intensity={6}>
-            <div className="glass-strong shadow-elevate p-8">
-              <div className="mb-8 text-center">
+            <div className="glass-strong shadow-elevate p-8 text-center">
+              <div className="mb-6">
                 <Link
                   to="/"
                   className="inline-flex items-center gap-2 text-sm font-semibold tracking-tight mb-6"
@@ -64,89 +42,33 @@ function Register() {
                   </span>
                   StudentOS
                 </Link>
-                <h1 className="text-3xl font-semibold tracking-tight">Create account</h1>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Start your AI-powered academic journey
+                <h1 className="text-3xl font-semibold tracking-tight">Public Sign-Up Closed</h1>
+                <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                  To maintain system integrity and proper Role-Based Access Control (RBAC), public user registration is disabled in StudentOS.
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-400"
-                  >
-                    {error}
-                  </motion.div>
-                )}
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Name</label>
-                  <div className="glass flex items-center gap-3 px-4 py-3">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Your name"
-                      className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
-                      required
-                    />
-                  </div>
+              <div className="my-6 p-4 rounded-xl border border-white/5 bg-white/2 text-left space-y-3">
+                <div className="text-xs font-semibold uppercase tracking-wider text-neon-cyan">Hierarchy Flow</div>
+                <div className="text-xs text-muted-foreground leading-relaxed">
+                  Accounts must be created hierarchically:
+                  <ul className="list-disc list-inside mt-2 space-y-1">
+                    <li>Super Admins manage Admin accounts.</li>
+                    <li>Admins manage Teacher accounts.</li>
+                    <li>Teachers register Student accounts.</li>
+                  </ul>
                 </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Email</label>
-                  <div className="glass flex items-center gap-3 px-4 py-3">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Password</label>
-                  <div className="glass flex items-center gap-3 px-4 py-3">
-                    <Lock className="h-4 w-4 text-muted-foreground" />
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
-                      required
-                      minLength={8}
-                    />
-                  </div>
-                </div>
-
-                <MagneticButton type="submit" className="w-full" disabled={loading}>
-                  {loading ? (
-                    "Creating account..."
-                  ) : (
-                    <>
-                      Create account <ArrowRight className="h-4 w-4" />
-                    </>
-                  )}
-                </MagneticButton>
-              </form>
-
-              <div className="mt-6 text-center text-sm">
-                <span className="text-muted-foreground">Already have an account? </span>
-                <Link
-                  to="/login"
-                  className="font-medium hover:text-foreground text-[color:var(--neon-cyan)]"
-                >
-                  Sign in
-                </Link>
               </div>
+
+              <p className="text-sm text-muted-foreground mb-6">
+                Please contact your course instructor or school administrator to register your StudentOS credentials.
+              </p>
+
+              <Link to="/login" className="inline-block w-full">
+                <MagneticButton className="w-full">
+                  Return to Sign In <ArrowRight className="h-4 w-4" />
+                </MagneticButton>
+              </Link>
             </div>
           </Panel3D>
         </motion.div>

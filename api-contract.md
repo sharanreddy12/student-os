@@ -1,6 +1,6 @@
 # StudentOS — API Contract (shared reference)
 
-Both the Lovable frontend and the Antigravity backend must conform to this contract exactly.
+Both the frontend and the Antigravity backend must conform to this contract exactly.
 If either side needs a change, update this file first, then update both builds to match.
 
 Base URL (dev): `http://localhost:8000/api/v1`
@@ -91,5 +91,5 @@ Backend returns `409` on overlap conflict for the same subject owner: `{ detail:
 ## Notes for integration
 
 - Frontend stores `access_token`/`refresh_token` and sends the access token on every request; on `401`, call `/auth/refresh` once, then retry.
-- Backend must enable CORS for the Lovable preview domain and `localhost` dev origins (configurable via `ALLOWED_ORIGINS` env var).
+- Backend must enable CORS for the preview domain and `localhost` dev origins (configurable via `ALLOWED_ORIGINS` env var).
 - Dates: ISO 8601 strings throughout (`"2026-07-11"` for dates, `"2026-07-11T14:30:00Z"` for timestamps).

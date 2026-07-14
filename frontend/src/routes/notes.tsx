@@ -1,8 +1,8 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import { useState, useEffect } from "react";
-import { FileText, Plus, Brain, Send, Sparkles, Trash2, Edit } from "lucide-react";
-import { apiClient } from "@/api/client";
+import { FileText, Plus, Brain, Send, Sparkles, Trash2, Edit, Home, Calendar, CheckCircle2, GraduationCap, BarChart3, ArrowLeft, Search } from "lucide-react";
+import { apiClient, type Note } from "@/api/client";
 import { MagneticButton } from "@/components/landing/atoms";
 
 interface ChatResponse {
@@ -22,45 +22,67 @@ export const Route = createFileRoute("/notes")({
 });
 
 function Notes() {
-  const [notes, setNotes] = useState<
-    Array<{ id: number; title: string; content: string; subject_id: number; updated_at: string }>
-  >([]);
-  const [selectedNote, setSelectedNote] = useState<{
-    id: number;
-    title: string;
-    content: string;
-    subject_id: number;
-    updated_at: string;
-  } | null>(null);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<{ role: string; content: string }[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
 
   useEffect(() => {
-    fetchNotes();
+    Promise.all([apiClient.getNotes(), apiClient.getSubjects()])
+      .then(([notesData, subjectsData]) => {
+        setNotes(notesData || []);
+        setSubjects((subjectsData || []) as any[]);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
-  const fetchNotes = async () => {
-    try {
-      const data = await apiClient.getNotes();
-      setNotes(
-        data as Array<{
-          id: number;
-          title: string;
-          content: string;
-          subject_id: number;
-          updated_at: string;
-        }>,
-      );
-    } catch (error) {
-      console.error("Failed to fetch notes:", error);
-    } finally {
-      setLoading(false);
+  const handleDelete = async (id: number) => {
+    if (confirm("Are you sure you want to delete this note?")) {
+      try {
+        await apiClient.deleteNote(id);
+        setNotes(notes.filter((n) => n.id !== id));
+      } catch (error) {
+        console.error("Failed to delete note:", error);
+      }
     }
   };
+
+  const handleEdit = (note: any) => {
+    setEditingNote(note);
+    setShowCreateModal(true);
+  };
+
+  const handleSave = async (data: any) => {
+    try {
+      if (editingNote) {
+        await apiClient.updateNote(editingNote.id, data);
+        setNotes(notes.map((n) => (n.id === editingNote.id ? { ...n, ...data } : n)));
+      } else {
+        const newNote = await apiClient.createNote(data);
+        setNotes([...notes, newNote]);
+      }
+      setShowCreateModal(false);
+      setEditingNote(null);
+    } catch (error) {
+      console.error("Failed to save note:", error);
+    }
+  };
+
+  const filteredNotes = notes.filter((note) => {
+    const matchesSearch = note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      note.content.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSubject = selectedSubject === null || note.subject_id === selectedSubject;
+    return matchesSearch && matchesSubject;
+  });
 
   const handleChat = async () => {
     if (!chatInput.trim()) return;
@@ -112,35 +134,84 @@ function Notes() {
             </div>
           </div>
 
+          <div className="flex gap-4 mb-6">
+            <div className="flex-1 glass flex items-center gap-2 px-4 py-2 rounded-lg">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search notes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 bg-transparent outline-none text-sm"
+              />
+            </div>
+            <select
+              value={selectedSubject || ""}
+              onChange={(e) => setSelectedSubject(e.target.value ? parseInt(e.target.value) : null)}
+              aria-label="Filter by subject"
+              className="glass px-4 py-2 rounded-lg bg-transparent outline-none text-sm"
+            >
+              <option value="" className="bg-background">All Subjects</option>
+              {subjects.map((s) => (
+                <option key={s.id} value={s.id} className="bg-background">
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {loading ? (
             <div className="text-center py-12">Loading...</div>
+          ) : filteredNotes.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              {searchQuery || selectedSubject ? "No notes match your search." : "No notes yet. Create your first note!"}
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {notes.map((note) => (
-                <motion.div
-                  key={note.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  onClick={() => setSelectedNote(note)}
-                  className="glass p-4 rounded-xl cursor-pointer hover:bg-white/5 transition-colors"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-medium">{note.title}</h3>
-                    <div className="flex gap-1">
-                      <button className="p-1 hover:bg-white/10 rounded">
-                        <Edit className="h-3 w-3" />
-                      </button>
-                      <button className="p-1 hover:bg-white/10 rounded">
-                        <Trash2 className="h-3 w-3" />
-                      </button>
+              {filteredNotes.map((note) => {
+                const subject = subjects.find((s) => s.id === note.subject_id);
+                return (
+                  <motion.div
+                    key={note.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="glass p-4 rounded-xl hover:bg-white/5 transition-colors relative group"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-medium">{note.title}</h3>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(note);
+                          }}
+                          aria-label="Edit note"
+                          className="p-1 hover:bg-white/10 rounded"
+                        >
+                          <Edit className="h-3 w-3" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(note.id);
+                          }}
+                          aria-label="Delete note"
+                          className="p-1 hover:bg-white/10 rounded text-red-400"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground line-clamp-3">{note.content}</p>
-                  <div className="mt-3 text-xs text-muted-foreground">
-                    {new Date(note.updated_at).toLocaleDateString()}
-                  </div>
-                </motion.div>
-              ))}
+                    {subject && (
+                      <div className="text-xs text-muted-foreground mb-2">{subject.name}</div>
+                    )}
+                    <p className="text-sm text-muted-foreground line-clamp-3">{note.content}</p>
+                    <div className="mt-3 text-xs text-muted-foreground">
+                      {new Date(note.updated_at).toLocaleDateString()}
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </main>
@@ -148,7 +219,15 @@ function Notes() {
 
       {chatOpen && <ChatPanel onClose={() => setChatOpen(false)} />}
       {showCreateModal && (
-        <CreateNoteModal onClose={() => setShowCreateModal(false)} onSuccess={fetchNotes} />
+        <CreateNoteModal
+          onClose={() => {
+            setShowCreateModal(false);
+            setEditingNote(null);
+          }}
+          onSave={handleSave}
+          subjects={subjects}
+          editingNote={editingNote}
+        />
       )}
     </div>
   );
@@ -156,41 +235,46 @@ function Notes() {
 
 function Sidebar() {
   const items = [
-    { icon: () => null, label: "Timetable" },
-    { icon: () => null, label: "Assignments" },
-    { icon: () => null, label: "Attendance" },
-    { icon: FileText, label: "Notes", active: true },
+    { icon: Home, label: "Home", active: false, to: "/dashboard" },
+    { icon: Calendar, label: "Timetable", active: false, to: "/timetable" },
+    { icon: FileText, label: "Notes", active: true, to: "/notes" },
+    { icon: CheckCircle2, label: "Assignments", active: false, to: "/assignments" },
+    { icon: GraduationCap, label: "Attendance", active: false, to: "/attendance" },
+    { icon: BarChart3, label: "Analytics", active: false, to: "/analytics" },
   ];
 
   return (
     <aside className="w-60 shrink-0 border-r border-white/5 p-4">
-      <Link to="/dashboard" className="mb-8 flex items-center gap-2 text-sm font-semibold">
-        <span
-          className="grid h-7 w-7 place-items-center rounded-lg"
-          style={{ background: "var(--gradient-brand)" }}
-        >
+      <Link to="/" className="mb-8 flex items-center gap-2 text-sm font-semibold">
+        <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-brand">
           <span className="h-2 w-2 rounded-sm bg-background" />
         </span>
         StudentOS
       </Link>
       <div className="space-y-1">
-        {items.map((it, i) => {
+        {items.map((it) => {
           const Icon = it.icon;
           return (
             <Link
-              key={i}
-              to={it.label === "Notes" ? "/notes" : "/dashboard"}
+              key={it.label}
+              to={it.to}
               className={`group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
                 it.active
                   ? "bg-white/10 text-foreground"
                   : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
               }`}
             >
-              {Icon && <Icon className="h-4 w-4" />} {it.label}
+              <Icon className="h-4 w-4" /> {it.label}
             </Link>
           );
         })}
       </div>
+      <Link
+        to="/"
+        className="mt-8 flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="h-3 w-3" /> Back to site
+      </Link>
     </aside>
   );
 }
@@ -231,7 +315,7 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
           <Brain className="h-5 w-5" />
           <h2 className="font-semibold">AI Assistant</h2>
         </div>
-        <button onClick={onClose} className="p-1 hover:bg-white/10 rounded">
+        <button onClick={onClose} aria-label="Close chat" className="p-1 hover:bg-white/10 rounded">
           ✕
         </button>
       </div>
@@ -247,7 +331,7 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
           <div
             key={i}
             className={`p-3 rounded-lg ${
-              msg.role === "user" ? "bg-white/10 ml-8" : "bg-[color:var(--gradient-brand)]/20 mr-8"
+              msg.role === "user" ? "bg-white/10 ml-8" : "bg-(--gradient-brand)/20 mr-8"
             }`}
           >
             <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
@@ -266,6 +350,7 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
         />
         <button
           onClick={handleSend}
+          aria-label="Send message"
           className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
         >
           <Send className="h-4 w-4" />
@@ -275,23 +360,28 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
-function CreateNoteModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [subjectId, setSubjectId] = useState("");
+function CreateNoteModal({
+  onClose,
+  onSave,
+  subjects,
+  editingNote,
+}: {
+  onClose: () => void;
+  onSave: (data: any) => void;
+  subjects: any[];
+  editingNote: any;
+}) {
+  const [title, setTitle] = useState(editingNote?.title || "");
+  const [content, setContent] = useState(editingNote?.content || "");
+  const [subjectId, setSubjectId] = useState(editingNote?.subject_id || "");
 
-  const handleSubmit = async () => {
-    try {
-      await apiClient.createNote({
-        title,
-        content,
-        subject_id: parseInt(subjectId) || 1,
-      });
-      onSuccess();
-      onClose();
-    } catch (error) {
-      console.error("Failed to create note:", error);
-    }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({
+      title,
+      content,
+      subject_id: parseInt(subjectId) || 1,
+    });
   };
 
   return (
@@ -308,35 +398,58 @@ function CreateNoteModal({ onClose, onSuccess }: { onClose: () => void; onSucces
         onClick={(e) => e.stopPropagation()}
         className="glass-strong w-full max-w-lg p-6 shadow-elevate"
       >
-        <h2 className="text-xl font-semibold mb-4">Create Note</h2>
-        <div className="space-y-4">
+        <h2 className="text-xl font-semibold mb-4">
+          {editingNote ? "Edit Note" : "Create Note"}
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-sm text-muted-foreground mb-1 block">Title</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              aria-label="Note title"
               className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:border-white/20"
+              required
             />
           </div>
           <div>
-            <label className="text-sm text-muted-foreground mb-1 block">Content</label>
+            <label className="text-sm text-muted-foreground mb-1 block">Subject</label>
+            <select
+              value={subjectId}
+              onChange={(e) => setSubjectId(e.target.value)}
+              aria-label="Select subject"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:border-white/20"
+              required
+            >
+              <option value="" className="bg-background">Select a subject</option>
+              {subjects.map((s) => (
+                <option key={s.id} value={s.id} className="bg-background">
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-sm text-muted-foreground mb-1 block">Content (Markdown supported)</label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              rows={6}
+              rows={8}
+              aria-label="Note content"
               className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:border-white/20"
+              required
             />
           </div>
-        </div>
-        <div className="flex gap-2 mt-6">
-          <MagneticButton onClick={handleSubmit} className="flex-1">
-            Create Note
-          </MagneticButton>
-          <MagneticButton onClick={onClose} variant="ghost">
-            Cancel
-          </MagneticButton>
-        </div>
+          <div className="flex gap-2 mt-6">
+            <MagneticButton type="submit" className="flex-1">
+              {editingNote ? "Update" : "Create"} Note
+            </MagneticButton>
+            <MagneticButton type="button" onClick={onClose} variant="ghost">
+              Cancel
+            </MagneticButton>
+          </div>
+        </form>
       </motion.div>
     </motion.div>
   );

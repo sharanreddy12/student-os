@@ -8,7 +8,8 @@ class Settings(BaseSettings):
     jwt_secret: str
     gemini_api_key: str = ""
     xai_api_key: str = ""
-    allowed_origins: str = "http://localhost:3000,http://localhost:5173"
+    groq_api_key: str = ""
+    allowed_origins: str = "http://localhost:3000,http://localhost:5173,http://localhost:8080,http://localhost:8083"
 
     @property
     def allowed_origins_list(self) -> List[str]:
