@@ -13,3 +13,4 @@ python-multipart==0.0.12
 google-generativeai==0.8.3
 openai==1.54.0
 pgvector==0.3.6
+email-validator==2.2.0
