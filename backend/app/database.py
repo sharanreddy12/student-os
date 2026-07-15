@@ -1,10 +1,28 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base
 from app.config import settings
 
-engine = create_engine(settings.database_url_decoded)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Read database URL
+DATABASE_URL = settings.database_url_decoded
+
+# Use psycopg v3 instead of psycopg2
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace(
+        "postgresql://",
+        "postgresql+psycopg://",
+        1
+    )
+
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+)
+
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+)
 
 Base = declarative_base()
 
